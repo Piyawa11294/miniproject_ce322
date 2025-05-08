@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>โปรแกรมติดตามการดื่มน้ำBY_UDTNET</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Prompt', sans-serif;
+        }
+        body {
+            background: linear-gradient(40deg, #85dfeb, #29B6F6);
+            color: #37474F;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            position: relative; /* สำหรับการวางไอคอนโปรไฟล์ */
+        }
+        /* ปรับแต่ง Tabs ให้มีมิติมากขึ้น */
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin: 30px 0;
+            position: relative;
+            z-index: 1;
+        }
+        .tab {
+            padding: 12px 22px;
+            cursor: pointer;
+            border-radius: 50px;
+            font-weight: 500;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+            border: none;
+            background: #f0f8ff;
+            color: #37474F;
+        }
+        .tab:before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: transparent;
+            transition: all 0.3s ease;
+        }
+        .tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.12);
+        }
+        .tab.active {
+            background: linear-gradient(145deg, #4FC3F7, #29B6F6);
+            color: white;
+            box-shadow: 0 5px 15px rgba(79, 195, 247, 0.4);
+            transform: translateY(-2px);
+        }
+        .tab.active:before {
+            background: rgba(255, 255, 255, 0.2);
+            height: 5px;
+        }
+        .tab:nth-child(1) {
+            border-bottom-left-radius: 10px;
+        }
+        .tab:last-child {
+            border-bottom-right-radius: 10px;
+        }
+        /* ไอคอนสำหรับแท็บ */
+        .tab-icon {
+            margin-right: 8px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        button {
+            background: #4FC3F7;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .progress-container {
+            height: 20px;
+            background: #e0f7fa;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(to right, #4FC3F7, #0288D1);
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            transition: width 0.5s ease-in-out;
+        }
+        .water-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .water-btn {
+            padding: 10px;
+            text-align: center;
+            background: linear-gradient(145deg, #4FC3F7, #29B6F6);
+            border: 1px solid #ccefff;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        .water-btn:hover {
+            background: #d0ebff;
+        }
+        .stats-card {
+            background: #fff;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border: 1px solid #e0f7fa;
+        }
+        .reminder-item {
+            margin: 5px 0;
+            padding: 10px;
+            background: #fff;
+            border: 1px solid #e0f7fa;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 10px 0;
+        }
+        
+        /* ส่วนของโปรไฟล์ผู้ใช้ */
+        .profile-icon {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #e0f7fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            overflow: hidden;
+            border: 3px solid #4FC3F7;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+/* สำหรับ container ของรูปโปรไฟล์ */
+	.profile-icon,
+		#dropdownProfilePhoto {
+    		width: 60px;
+    		height: 60px;
+    		border-radius: 50%;
+    		overflow: hidden;
+	}
+
+/* สำหรับ <img> ภายใน container */
+	.profile-icon img,
+	#dropdownProfilePhoto img {
+    	width: 100%;
+    	height: 100%;
+    	object-fit: cover;
+    	object-position: center;
+	}
+        
+        .profile-dropdown {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+            width: 280px;
+            display: none;
+            z-index: 100;
+        }
+        
+        .profile-dropdown.active {
+            display: block;
+            animation: fadeIn 0.3s ease forwards;
+        }
+        
+        .profile-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0f7fa;
+        }
+        
+        .profile-info {
+            margin-left: 15px;
+        }
+        
+        .profile-info h3 {
+            margin: 0;
+            font-size: 16px;
+            color: #37474F;
+        }
+        
+        .profile-info p {
+            margin: 2px 0;
+            font-size: 14px;
+            color: #607D8B;
+        }
+        
+        .profile-action {
+            padding: 8px 0;
+            cursor: pointer;
+            color: #4FC3F7;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .profile-action:hover {
+            color: #0288D1;
+        }
+        
+        .setup-complete-info {
+            text-align: center;
+            padding: 20px;
+            background-color: #e0f7fa;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .photo-upload-container {
+            margin-top: 15px;
+            text-align: center;
+        }
+        
+        .photo-upload-btn {
+            display: inline-block;
+            background: #4FC3F7;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        
+        #profilePhotoInput {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💧 โปรแกรมติดตามการดื่มน้ำประจำวัน</h1>
+        
+        <!-- ไอคอนโปรไฟล์ (ซ่อนไว้ตอนเริ่มต้น) -->
+        <div class="profile-icon" id="profileIcon" style="display: none;">
+            <div class="no-image">👤</div>
+        </div>
+        
+        <!-- เมนูดรอปดาวน์สำหรับโปรไฟล์ -->
+        <div class="profile-dropdown" id="profileDropdown">
+            <div class="profile-header">
+                <div class="profile-photo" id="dropdownProfilePhoto">
+                    <div class="no-image">👤</div>
+                </div>
+                <div class="profile-info">
+                    <h3>ข้อมูลส่วนตัว</h3>
+                    <p>อายุ: <span id="profileAge">-</span> ปี</p>
+                    <p>น้ำหนัก: <span id="profileWeight">-</span> กก.</p>
+                    <p>ระดับกิจกรรม: <span id="profileActivity">-</span></p>
+                </div>
+            </div>
+            <div class="photo-upload-container">
+                <label for="profilePhotoInput" class="photo-upload-btn">เปลี่ยนรูปโปรไฟล์</label>
+                <input type="file" id="profilePhotoInput" accept="image/*">
+            </div>
+            <div class="profile-action" id="editProfileAction">แก้ไขข้อมูลส่วนตัว</div>
+        </div>
+
+        <!-- Tabs ที่ปรับปรุงแล้ว -->
+        <div class="tabs">
+            <div class="tab active" data-tab="setup" id="setupTab"><span class="tab-icon">⚙️</span>ตั้งค่า</div>
+            <div class="tab" data-tab="tracking"><span class="tab-icon">🥤</span>การดื่มน้ำวันนี้</div>
+            <div class="tab" data-tab="reminders"><span class="tab-icon">⏰</span>การแจ้งเตือน</div>
+            <div class="tab" data-tab="history"><span class="tab-icon">📊</span>ประวัติ</div>
+        </div>
+
+        <!-- ตั้งค่า -->
+        <div id="setup" class="tab-content active">
+            <div id="setupForm">
+                <h2>ข้อมูลส่วนตัว</h2>
+                <div class="form-group">
+                    <label for="weight">น้ำหนัก (กิโลกรัม)</label>
+                    <input type="number" id="weight" min="30" max="200" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label for="gender">เพศ</label>
+                    <select id="gender">
+                        <option value="male">ชาย</option>
+                        <option value="female">หญิง</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="age">อายุ (ปี)</label>
+                    <input type="number" id="age" min="1" max="120">
+                </div>
+                <div class="form-group">
+                    <label for="activityLevel">ระดับกิจกรรม</label>
+                    <select id="activityLevel">
+                        <option value="low">เบา</option>
+                        <option value="moderate">ปานกลาง</option>
+                        <option value="high">สูง</option>
+                    </select>
+                </div>
+                <button id="saveUserData">บันทึกข้อมูล</button>
+            </div>
+            <div id="setupComplete" class="setup-complete-info" style="display: none;">
+                <h3>ข้อมูลส่วนตัวของคุณได้รับการบันทึกแล้ว</h3>
+                <p>คุณสามารถดูและแก้ไขข้อมูลส่วนตัวได้โดยคลิกที่ไอคอนโปรไฟล์ที่มุมขวาบน</p>
+            </div>
+        </div>
+
+        <!-- การดื่มน้ำวันนี้ -->
+        <div id="tracking" class="tab-content">
+            <h2>การดื่มน้ำวันนี้</h2>
+            <div id="waterIntakeDisplay">
+                <h3>เป้าหมาย: <span id="dailyGoal">0</span> มล.</h3>
+                <h3>ดื่มไปแล้ว: <span id="currentIntake">0</span> มล.</h3>
+                <div class="progress-container">
+                    <div class="progress-bar" id="intakeProgress">0%</div>
+                </div>
+            </div>
+            <h3>เพิ่มการดื่มน้ำ</h3>
+            <div class="water-grid">
+                <button class="water-btn" data-amount="100">100 มล.</button>
+                <button class="water-btn" data-amount="200">200 มล.</button>
+                <button class="water-btn" data-amount="250">250 มล.</button>
+                <button class="water-btn" data-amount="300">300 มล.</button>
+                <button class="water-btn" data-amount="500">500 มล.</button>
+                <button class="water-btn" data-amount="750">750 มล.</button>
+            </div>
+            <div class="form-group">
+                <label for="customAmount">กำหนดเอง (มล.)</label>
+                <input type="number" id="customAmount" min="10" max="2000" step="10">
+            </div>
+            <button id="addCustomAmount">เพิ่มปริมาณ</button>
+        </div>
+
+        <!-- การแจ้งเตือน -->
+        <div id="reminders" class="tab-content">
+            <h2>ตั้งค่าการแจ้งเตือน</h2>
+            <div class="form-group">
+                <label for="reminderTime">เวลาแจ้งเตือน</label>
+                <input type="time" id="reminderTime">
+            </div>
+            <button id="addReminder">เพิ่มการแจ้งเตือน</button>
+            <h3>การแจ้งเตือนที่ตั้งไว้</h3>
+            <div id="remindersList"></div>
+        </div>
+
+        <!-- ประวัติ -->
+        <div id="history" class="tab-content">
+            <h2>ประวัติการดื่มน้ำ</h2>
+            <div class="stats-grid">
+                <div class="stats-card">
+                    <h3>สถิติ 7 วันล่าสุด</h3>
+                    <p>เฉลี่ย: <span id="weeklyAverage">0</span> มล./วัน</p>
+                    <p>ดีที่สุด: <span id="weeklyBest">0</span> มล.</p>
+                </div>
+                <div class="stats-card">
+                    <h3>สถิติเดือนนี้</h3>
+                    <p>เฉลี่ย: <span id="monthlyAverage">0</span> มล./วัน</p>
+                    <p>วันที่ดื่มครบเป้า: <span id="monthlyGoalDays">0</span> วัน</p>
+                </div>
+            </div>
+            <h3>บันทึกรายวัน</h3>
+            <div id="historyList"></div>
+        </div>
+    </div>
+
+    <style>
+        /* เพิ่ม CSS สำหรับป๊อปอัพแจ้งเตือน */
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            animation: fadeInOut 2.5s ease-in-out;
+        }
+        
+        @keyframes fadeInOut {
+            0% { opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+    </style>
+    
+    <!-- ป๊อปอัพแจ้งเตือน -->
+    <div id="successPopup" class="popup">บันทึกข้อมูลสำเร็จ</div>
+    
+    <script>
+       // Base Class สำหรับการเก็บข้อมูลทั่วไป - เป็น Abstract Class
+class StorageManager {
+    constructor(storageKey) {
+        this.storageKey = storageKey;
+    }
+
+    save(data) {
+        localStorage.setItem(this.storageKey, JSON.stringify(data));
+    }
+
+    load() {
+        const savedData = localStorage.getItem(this.storageKey);
+        return savedData ? JSON.parse(savedData) : null;
+    }
+
+    clear() {
+        localStorage.removeItem(this.storageKey);
+    }
+}
+
+// User Class ที่สืบทอดมาจาก StorageManager
+class User extends StorageManager {
+    constructor() {
+        super('userData');
+        this.weight = 0;
+        this.gender = 'male';
+        this.age = 0;
+        this.activityLevel = 'moderate';
+        this.dailyWaterGoal = 0;
+        this.profilePhoto = null;
+        this.setupCompleted = false;
+        this.loadFromStorage();
+    }
+
+    loadFromStorage() {
+        const savedData = this.load();
+        if (savedData) {
+            this.weight = savedData.weight || 0;
+            this.gender = savedData.gender || 'male';
+            this.age = savedData.age || 0;
+            this.activityLevel = savedData.activityLevel || 'moderate';
+            this.dailyWaterGoal = savedData.dailyWaterGoal || 0;
+            this.profilePhoto = savedData.profilePhoto || null;
+            this.setupCompleted = savedData.setupCompleted || false;
+        }
+    }
+
+    saveToStorage() {
+        this.save({
+            weight: this.weight,
+            gender: this.gender,
+            age: this.age,
+            activityLevel: this.activityLevel,
+            dailyWaterGoal: this.dailyWaterGoal,
+            profilePhoto: this.profilePhoto,
+            setupCompleted: this.setupCompleted
+        });
+    }
+
+    setUserData(weight, gender, age, activityLevel) {
+        this.weight = parseFloat(weight);
+        this.gender = gender;
+        this.age = parseInt(age);
+        this.activityLevel = activityLevel;
+        this.setupCompleted = true;
+        this.calculateWaterGoal();
+        this.saveToStorage();
+    }
+
+    calculateWaterGoal() {
+        let baseAmount = this.weight * 30;
+        if (this.gender === 'male') baseAmount *= 1.1;
+        if (this.age > 60) baseAmount *= 0.9;
+        if (this.activityLevel === 'low') baseAmount *= 0.9;
+        else if (this.activityLevel === 'high') baseAmount *= 1.2;
+        this.dailyWaterGoal = Math.round(baseAmount / 100) * 100;
+    }
+
+    setProfilePhoto(photoDataUrl) {
+        this.profilePhoto = photoDataUrl;
+        this.saveToStorage();
+    }
+
+    getActivityLevelText() {
+        const activityMapping = {
+            'low': 'เบา',
+            'moderate': 'ปานกลาง',
+            'high': 'สูง'
+        };
+        return activityMapping[this.activityLevel] || 'ไม่ระบุ';
+    }
+}
+
+// Abstract TrackingData Class สำหรับเป็น Base ของข้อมูลที่ต้องติดตาม
+class TrackingData extends StorageManager {
+    constructor(storageKey) {
+        super(storageKey);
+        this.data = {};
+        this.loadFromStorage();
+    }
+
+    loadFromStorage() {
+        const savedData = this.load();
+        this.data = savedData || {};
+    }
+
+    saveToStorage() {
+        this.save(this.data);
+    }
+
+    getFormattedDate(date) {
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    }
+
+    // Abstract methods to be implemented by child classes
+    addEntry() { throw new Error("Method 'addEntry()' must be implemented."); }
+    getStats() { throw new Error("Method 'getStats()' must be implemented."); }
+}
+
+// WaterTracker Class ที่สืบทอดมาจาก TrackingData
+class WaterTracker extends TrackingData {
+    constructor(user) {
+        super('waterData');
+        this.user = user;
+        this.currentDate = this.getFormattedDate(new Date());
+        this.initializeToday();
+    }
+
+    initializeToday() {
+        const today = this.getFormattedDate(new Date());
+        if (!this.data[today]) {
+            this.data[today] = {
+                goal: this.user.dailyWaterGoal,
+                intake: 0
+            };
+        }
+        this.currentDate = today;
+    }
+
+    addEntry(amount) { // Implements abstract method
+        this.initializeToday();
+        this.data[this.currentDate].intake += amount;
+        this.saveToStorage();
+    }
+
+    getTodayIntake() {
+        this.initializeToday();
+        return this.data[this.currentDate].intake;
+    }
+
+    getDailyGoal() {
+        return this.user.dailyWaterGoal;
+    }
+
+    getProgressPercentage() {
+        const intake = this.getTodayIntake();
+        const goal = this.getDailyGoal();
+        return goal ? Math.min((intake / goal) * 100, 100) : 0;
+    }
+
+    // Implementation of abstract method
+    getStats() {
+        return {
+            weekly: this.getWeeklyStats(),
+            monthly: this.getMonthlyStats()
+        };
+    }
+
+    getWeeklyStats() {
+        const today = new Date();
+        const pastWeek = [];
+        
+        for (let i = 0; i < 7; i++) {
+            const date = new Date(today);
+            date.setDate(today.getDate() - i);
+            pastWeek.push(this.getFormattedDate(date));
+        }
+        
+        let total = 0;
+        let best = 0;
+        let count = 0;
+        
+        pastWeek.forEach(date => {
+            if (this.data[date]) {
+                total += this.data[date].intake;
+                best = Math.max(best, this.data[date].intake);
+                count++;
+            }
+        });
+        
+        return {
+            average: count ? Math.round(total / count) : 0,
+            best: best
+        };
+    }
+    
+    getMonthlyStats() {
+        const today = new Date();
+        const month = today.getMonth();
+        const year = today.getFullYear();
+        
+        let total = 0;
+        let goalDays = 0;
+        let count = 0;
+        
+        for (const date in this.data) {
+            const recordDate = new Date(date);
+            if (recordDate.getMonth() === month && recordDate.getFullYear() === year) {
+                total += this.data[date].intake;
+                if (this.data[date].intake >= this.data[date].goal) {
+                    goalDays++;
+                }
+                count++;
+            }
+        }
+        
+        return {
+            average: count ? Math.round(total / count) : 0,
+            goalDays: goalDays
+        };
+    }
+}
+
+// Class Reminder ที่สืบทอดมาจาก StorageManager
+class ReminderManager extends StorageManager {
+    constructor() {
+        super('waterReminders');
+        this.reminders = [];
+        this.loadFromStorage();
+        this.initNotifications();
+    }
+
+    loadFromStorage() {
+        const savedData = this.load();
+        this.reminders = savedData || [];
+    }
+
+    saveToStorage() {
+        this.save(this.reminders);
+    }
+
+    addReminder(time) {
+        if (!this.reminders.includes(time)) {
+            this.reminders.push(time);
+            this.reminders.sort();
+            this.saveToStorage();
+            this.scheduleNotification(time);
+            return true;
+        }
+        return false;
+    }
+
+    removeReminder(time) {
+        this.reminders = this.reminders.filter(t => t !== time);
+        this.saveToStorage();
+    }
+
+    getAllReminders() {
+        return [...this.reminders];
+    }
+
+    initNotifications() {
+        if (Notification.permission !== "granted") Notification.requestPermission();
+        this.reminders.forEach(time => this.scheduleNotification(time));
+    }
+
+    scheduleNotification(time) {
+        const [hours, minutes] = time.split(':').map(Number);
+        const now = new Date();
+        const notificationTime = new Date(now);
+        notificationTime.setHours(hours, minutes, 0, 0);
+        if (notificationTime <= now) notificationTime.setDate(notificationTime.getDate() + 1);
+        setTimeout(() => {
+            new Notification("เตือนดื่มน้ำ", { body: "ได้เวลาดื่มน้ำแล้ว!" });
+            this.scheduleNotification(time); // ตั้งซ้ำทุกวัน
+        }, notificationTime - now);
+    }
+}
+
+// DisplayManager - Abstract Class
+class DisplayManager {
+    constructor(elementId) {
+        this.element = document.getElementById(elementId);
+    }
+
+    update() {
+        throw new Error("Method 'update()' must be implemented.");
+    }
+
+    show() {
+        this.element.style.display = 'block';
+    }
+
+    hide() {
+        this.element.style.display = 'none';
+    }
+}
+
+// WaterDisplayManager Class - สืบทอดจาก DisplayManager
+class WaterDisplayManager extends DisplayManager {
+    constructor(waterTracker) {
+        super('waterIntakeDisplay');
+        this.waterTracker = waterTracker;
+        this.dailyGoalElement = document.getElementById('dailyGoal');
+        this.currentIntakeElement = document.getElementById('currentIntake');
+        this.intakeProgressElement = document.getElementById('intakeProgress');
+    }
+
+    update() {
+        this.dailyGoalElement.textContent = this.waterTracker.getDailyGoal();
+        this.currentIntakeElement.textContent = this.waterTracker.getTodayIntake();
+        const progress = this.waterTracker.getProgressPercentage();
+        this.intakeProgressElement.style.width = `${progress}%`;
+        this.intakeProgressElement.textContent = `${Math.round(progress)}%`;
+    }
+}
+
+// StatsDisplayManager Class - สืบทอดจาก DisplayManager
+class StatsDisplayManager extends DisplayManager {
+    constructor(waterTracker) {
+        super('history');
+        this.waterTracker = waterTracker;
+        this.weeklyAverageElement = document.getElementById('weeklyAverage');
+        this.weeklyBestElement = document.getElementById('weeklyBest');
+        this.monthlyAverageElement = document.getElementById('monthlyAverage');
+        this.monthlyGoalDaysElement = document.getElementById('monthlyGoalDays');
+        this.historyListElement = document.getElementById('historyList');
+    }
+
+    update() {
+        const stats = this.waterTracker.getStats();
+        this.weeklyAverageElement.textContent = stats.weekly.average;
+        this.weeklyBestElement.textContent = stats.weekly.best;
+        this.monthlyAverageElement.textContent = stats.monthly.average;
+        this.monthlyGoalDaysElement.textContent = stats.monthly.goalDays;
+        
+        this.updateHistoryList();
+    }
+
+    updateHistoryList() {
+        this.historyListElement.innerHTML = '';
+        const records = Object.entries(this.waterTracker.data)
+            .sort((a, b) => new Date(b[0]) - new Date(a[0])) // เรียงจากวันล่าสุด
+            .slice(0, 10); // แสดง 10 วันล่าสุด
+        
+        if (records.length === 0) {
+            this.historyListElement.innerHTML = '<p>ยังไม่มีประวัติการดื่มน้ำ</p>';
+            return;
+        }
+        
+        records.forEach(([date, data]) => {
+            const dateObj = new Date(date);
+            const formattedDate = `${dateObj.getDate()}/${dateObj.getMonth() + 1}/${dateObj.getFullYear()}`;
+            const percentage = data.goal ? Math.round((data.intake / data.goal) * 100) : 0;
+            
+            const historyItem = document.createElement('div');
+            historyItem.className = 'stats-card';
+            historyItem.innerHTML = `
+                <p><strong>${formattedDate}</strong></p>
+                <p>ดื่มไปแล้ว: ${data.intake} มล. (${percentage}% ของเป้าหมาย)</p>
+                <div class="progress-container">
+                    <div class="progress-bar" style="width: ${percentage}%">${percentage}%</div>
+                </div>
+            `;
+            this.historyListElement.appendChild(historyItem);
+        });
+    }
+}
+
+// RemindersDisplayManager Class - สืบทอดจาก DisplayManager
+class RemindersDisplayManager extends DisplayManager {
+    constructor(reminderManager) {
+        super('remindersList');
+        this.reminderManager = reminderManager;
+        this.successPopup = document.getElementById('successPopup');
+    }
+
+    update() {
+        this.element.innerHTML = '';
+        const reminders = this.reminderManager.getAllReminders();
+        
+        if (reminders.length === 0) {
+            this.element.innerHTML = '<p>ยังไม่มีการแจ้งเตือน</p>';
+            return;
+        }
+        
+        reminders.forEach(time => {
+            const reminderItem = document.createElement('div');
+            reminderItem.className = 'reminder-item';
+            reminderItem.innerHTML = `
+                <span>${time}</span>
+                <button class="remove-reminder" data-time="${time}">ลบ</button>
+            `;
+            this.element.appendChild(reminderItem);
+        });
+        
+        document.querySelectorAll('.remove-reminder').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const time = e.target.getAttribute('data-time');
+                this.reminderManager.removeReminder(time);
+                this.update();
+                this.showSuccessPopup('ลบการแจ้งเตือนสำเร็จ');
+            });
+        });
+    }
+
+    showSuccessPopup(message) {
+        this.successPopup.textContent = message;
+        this.successPopup.style.display = 'block';
+        
+        setTimeout(() => {
+            this.successPopup.style.display = 'none';
+        }, 2500);
+    }
+}
+
+// ProfileManager Class - จัดการข้อมูลและการแสดงผลโปรไฟล์
+class ProfileManager {
+    constructor(user) {
+        this.user = user;
+        this.profileIcon = document.getElementById('profileIcon');
+        this.profileDropdown = document.getElementById('profileDropdown');
+        this.setupForm = document.getElementById('setupForm');
+        this.setupComplete = document.getElementById('setupComplete');
+        this.dropdownProfilePhoto = document.getElementById('dropdownProfilePhoto');
+        this.profileAge = document.getElementById('profileAge');
+        this.profileWeight = document.getElementById('profileWeight');
+        this.profileActivity = document.getElementById('profileActivity');
+        this.successPopup = document.getElementById('successPopup');
+        
+        // Initialize event listeners
+        this.initEvents();
+    }
+
+    updateDisplay() {
+        if (this.user.setupCompleted) {
+            this.profileIcon.style.display = 'flex';
+            this.setupComplete.style.display = 'block';
+            this.setupForm.style.display = 'none';
+            
+            // อัพเดทข้อมูลในโปรไฟล์
+            this.profileAge.textContent = this.user.age;
+            this.profileWeight.textContent = this.user.weight;
+            this.profileActivity.textContent = this.user.getActivityLevelText();
+            
+            // อัพเดทรูปโปรไฟล์
+            this.updateProfilePhoto();
+        } else {
+            this.profileIcon.style.display = 'none';
+            this.setupComplete.style.display = 'none';
+            this.setupForm.style.display = 'block';
+        }
+    }
+
+    updateProfilePhoto() {
+        const profileIconInner = this.profileIcon.querySelector('.no-image');
+        const dropdownProfilePhotoInner = this.dropdownProfilePhoto.querySelector('.no-image');
+        
+        if (this.user.profilePhoto) {
+            // ลบ no-image ถ้ามี
+            if (profileIconInner) this.profileIcon.removeChild(profileIconInner);
+            if (dropdownProfilePhotoInner) this.dropdownProfilePhoto.removeChild(dropdownProfilePhotoInner);
+            
+            // สร้าง img element ถ้ายังไม่มี
+            let profileImg = this.profileIcon.querySelector('img');
+            if (!profileImg) {
+                profileImg = document.createElement('img');
+                this.profileIcon.appendChild(profileImg);
+            }
+            
+            let dropdownImg = this.dropdownProfilePhoto.querySelector('img');
+            if (!dropdownImg) {
+                dropdownImg = document.createElement('img');
+                this.dropdownProfilePhoto.appendChild(dropdownImg);
+            }
+            
+            // กำหนด src ให้กับรูปภาพ
+            profileImg.src = this.user.profilePhoto;
+            dropdownImg.src = this.user.profilePhoto;
+        } else {
+            // กรณีไม่มีรูปโปรไฟล์
+            if (!profileIconInner) {
+                const noImage = document.createElement('div');
+                noImage.className = 'no-image';
+                noImage.textContent = '👤';
+                this.profileIcon.appendChild(noImage);
+            }
+            
+            if (!dropdownProfilePhotoInner) {
+                const noImage = document.createElement('div');
+                noImage.className = 'no-image';
+                noImage.textContent = '👤';
+                this.dropdownProfilePhoto.appendChild(noImage);
+            }
+        }
+    }
+
+    showSuccessPopup(message) {
+        this.successPopup.textContent = message || 'บันทึกข้อมูลสำเร็จ';
+        this.successPopup.style.display = 'block';
+        
+        setTimeout(() => {
+            this.successPopup.style.display = 'none';
+        }, 2500);
+    }
+
+    initEvents() {
+        // โปรไฟล์ไอคอนคลิก
+        this.profileIcon.addEventListener('click', () => {
+            this.profileDropdown.classList.toggle('active');
+        });
+
+        // ปิดเมนูโปรไฟล์เมื่อคลิกที่อื่น
+        document.addEventListener('click', (event) => {
+            if (!this.profileIcon.contains(event.target) && !this.profileDropdown.contains(event.target)) {
+                this.profileDropdown.classList.remove('active');
+            }
+        });
+
+        // แก้ไขโปรไฟล์
+        document.getElementById('editProfileAction').addEventListener('click', () => {
+            document.getElementById('weight').value = this.user.weight;
+            document.getElementById('gender').value = this.user.gender;
+            document.getElementById('age').value = this.user.age;
+            document.getElementById('activityLevel').value = this.user.activityLevel;
+            
+            document.querySelector('.tab[data-tab="setup"]').click();
+            this.setupComplete.style.display = 'none';
+            this.setupForm.style.display = 'block';
+            this.profileDropdown.classList.remove('active');
+        });
+
+        // อัพโหลดรูปโปรไฟล์
+        document.getElementById('profilePhotoInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.user.setProfilePhoto(e.target.result);
+                    this.updateProfilePhoto();
+                    this.showSuccessPopup('อัพเดทรูปโปรไฟล์สำเร็จ');
+                };
+                reader.readAsDataURL(file);
+            } else if (file) {
+                alert('กรุณาอัพโหลดไฟล์รูปภาพเท่านั้น');
+            }
+        });
+    }
+}
+
+// TabManager Class - จัดการ Tab UI
+class TabManager {
+    constructor(user) {
+        this.user = user;
+        this.tabs = document.querySelectorAll('.tab');
+        this.tabContents = document.querySelectorAll('.tab-content');
+        this.initEvents();
+    }
+
+    initEvents() {
+        this.tabs.forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                const tabId = e.target.getAttribute('data-tab');
+                
+                // ไม่อนุญาตให้เข้าถึงบางแท็บหากยังไม่มีการตั้งค่า
+                if (!this.user.setupCompleted && tabId !== 'setup') {
+                    alert('กรุณาตั้งค่าข้อมูลส่วนตัวก่อน');
+                    return;
+                }
+                
+                this.tabs.forEach(t => t.classList.remove('active'));
+                this.tabContents.forEach(tc => tc.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(tabId).classList.add('active');
+                
+                // Event สำหรับ tab changed
+                const event = new CustomEvent('tabChanged', { detail: { tabId: tabId } });
+                document.dispatchEvent(event);
+            });
+        });
+    }
+
+    switchToTab(tabId) {
+        document.querySelector(`.tab[data-tab="${tabId}"]`).click();
+    }
+}
+
+// AppController - จัดการแอปพลิเคชันทั้งหมด
+class AppController {
+    constructor() {
+        // สร้าง instances ของคลาสต่างๆ
+        this.user = new User();
+        this.waterTracker = new WaterTracker(this.user);
+        this.reminderManager = new ReminderManager();
+        
+        // สร้าง UI managers
+        this.tabManager = new TabManager(this.user);
+        this.profileManager = new ProfileManager(this.user);
+        this.waterDisplayManager = new WaterDisplayManager(this.waterTracker);
+        this.statsDisplayManager = new StatsDisplayManager(this.waterTracker);
+        this.remindersDisplayManager = new RemindersDisplayManager(this.reminderManager);
+        
+        // Initialize
+        this.initEventListeners();
+        this.initApp();
+    }
+
+    initEventListeners() {
+        // บันทึกข้อมูลส่วนตัว
+        document.getElementById('saveUserData').addEventListener('click', () => {
+    try {
+            const weight = document.getElementById('weight').value;
+            const gender = document.getElementById('gender').value;
+            const age = document.getElementById('age').value;
+            const activityLevel = document.getElementById('activityLevel').value;
+            
+            if (!weight || !age) {
+                alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+                return;
+            }
+            
+            this.user.setUserData(weight, gender, age, activityLevel);
+            this.waterTracker = new WaterTracker(this.user);
+            
+            // อัพเดท managers ที่ต้องใช้ tracker ใหม่
+            this.waterDisplayManager = new WaterDisplayManager(this.waterTracker);
+            this.statsDisplayManager = new StatsDisplayManager(this.waterTracker);
+            
+            this.waterDisplayManager.update();
+            this.profileManager.updateDisplay();
+            this.profileManager.showSuccessPopup('บันทึกข้อมูลส่วนตัวสำเร็จ');
+            
+            // เปลี่ยนไปยังแท็บดื่มน้ำ
+            this.tabManager.switchToTab('tracking');
+    } catch (error) {
+        console.error('เกิดข้อผิดพลาดขณะบันทึกข้อมูล:', error);
+        alert('ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่');
+    }
+});
+
+        // เพิ่มน้ำดื่ม
+        document.querySelectorAll('.water-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        try {
+                const amount = parseInt(e.target.getAttribute('data-amount'));
+                this.waterTracker.addEntry(amount);
+                this.waterDisplayManager.update();
+                this.profileManager.showSuccessPopup(`เพิ่มน้ำ ${amount} มล. สำเร็จ`);
+        } catch (error) {
+            console.error('เพิ่มน้ำล้มเหลว:', error);
+            alert('ไม่สามารถเพิ่มปริมาณน้ำได้');
+        }
+    });
+});
+
+        // เพิ่มน้ำดื่มแบบกำหนดเอง
+        document.getElementById('addCustomAmount').addEventListener('click', () => {
+    try {
+            const customAmountInput = document.getElementById('customAmount');
+            const amount = parseInt(customAmountInput.value);
+            if (amount && amount > 0) {
+                this.waterTracker.addEntry(amount);
+                this.waterDisplayManager.update();
+                this.profileManager.showSuccessPopup(`เพิ่มน้ำ ${amount} มล. สำเร็จ`);
+                customAmountInput.value = '';
+            } else {
+                alert('กรุณากรอกปริมาณน้ำที่ถูกต้อง');
+            }
+    } catch (error) {
+        console.error('เกิดข้อผิดพลาดขณะเพิ่มน้ำ:', error);
+        alert('ไม่สามารถเพิ่มปริมาณน้ำได้');
+    }
+});
+
+        // เพิ่มการแจ้งเตือน
+        document.getElementById('addReminder').addEventListener('click', () => {
+    try {
+            const reminderTimeInput = document.getElementById('reminderTime');
+            const time = reminderTimeInput.value;
+            if (time) {
+                const added = this.reminderManager.addReminder(time);
+                if (added) {
+                    this.remindersDisplayManager.update();
+                    this.profileManager.showSuccessPopup(`เพิ่มการแจ้งเตือนเวลา ${time} สำเร็จ`);
+                    reminderTimeInput.value = '';
+                } else {
+                    alert('การแจ้งเตือนนี้มีอยู่แล้ว');
+                }
+            } else {
+                alert('กรุณาเลือกเวลาแจ้งเตือน');
+            }
+    } catch (error) {
+        console.error('เกิดข้อผิดพลาดขณะเพิ่มการแจ้งเตือน:', error);
+        alert('ไม่สามารถเพิ่มการแจ้งเตือนได้');
+    }
+});
+
+        // เมื่อมีการเปลี่ยนแท็บ
+        document.addEventListener('tabChanged', (e) => {
+            const tabId = e.detail.tabId;
+            
+            if (tabId === 'tracking') this.waterDisplayManager.update();
+            if (tabId === 'reminders') this.remindersDisplayManager.update();
+            if (tabId === 'history') this.statsDisplayManager.update();
+        });
+    }
+
+    initApp() {
+        // ตั้งค่าเริ่มต้นของฟอร์ม
+        if (this.user.weight) document.getElementById('weight').value = this.user.weight;
+        if (this.user.age) document.getElementById('age').value = this.user.age;
+        if (this.user.gender) document.getElementById('gender').value = this.user.gender;
+        if (this.user.activityLevel) document.getElementById('activityLevel').value = this.user.activityLevel;
+        
+        // อัพเดทการแสดงผลตามข้อมูลที่มี
+        this.profileManager.updateDisplay();
+        
+        if (this.user.setupCompleted) {
+            this.waterDisplayManager.update();
+            this.remindersDisplayManager.update();
+            this.statsDisplayManager.update();
+            
+            // ถ้าตั้งค่าแล้ว กำหนดให้แสดงแท็บ tracking เป็นค่าเริ่มต้น
+            this.tabManager.switchToTab('tracking');
+        }
+    }
+}
+
+// เริ่มต้นแอปเมื่อ DOM โหลดเสร็จ
+document.addEventListener('DOMContentLoaded', function () {
+    const app = new AppController();
+});
+    </script>
+</body>
+</html>
